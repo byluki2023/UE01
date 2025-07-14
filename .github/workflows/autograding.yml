@@ -1,0 +1,103 @@
+name: Autograding Tests
+
+on:
+  push:
+    branches:
+      - main
+  repository_dispatch:
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+
+    steps:
+      - name: Checkout Student Repo Code
+        uses: actions/checkout@v4
+
+      - name: Checkout Private Tests Repo
+        uses: actions/checkout@v4
+        with:
+          repository: byluki2023/UE01_AllTests
+          token: ${{ secrets.TESTS_REPO_TOKEN }}
+          path: tests
+
+      - name: Build & install Student Project
+        run: mvn clean install
+
+      - name: TicTacToeTest
+        id: tictactoetest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: TicTacToeTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A01_TicTacToeTest
+          timeout: 5
+          max-score: 4
+
+      - name: EinfacheRechnungenTest
+        id: einfacherechnungentest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: EinfacheRechnungenTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A02_EinfacheRechnungenTest
+          timeout: 5
+          max-score: 4
+
+      - name: LohnberechnungenTest
+        id: lohnberechnungentest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: LohnberechnungenTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A03_LohnberechnungenTest
+          timeout: 5
+          max-score: 4
+
+      - name: BetriebskostenrechnerTest
+        id: betriebskostenrechnertest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: BetriebskostenrechnerTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A04_BetriebskostenrechnerTest
+          timeout: 5
+          max-score: 4
+
+      - name: AngebotserstellungTest
+        id: angebotserstellungtest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: AngebotserstellungTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A05_AngebotserstellungTest
+          timeout: 5
+          max-score: 4
+
+      - name: Wechselgeld_BerechnungTest
+        id: wechselgeld_berechnungtest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Wechselgeld_BerechnungTest
+          setup-command: mvn clean install
+          command: cd tests && mvn test -Dtest=A06_Wechselgeld_BerechnungTest
+          timeout: 5
+          max-score: 4
+
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          TICTACTOETEST_RESULTS: "${{steps.tictactoetest.outputs.result}}"
+          EINFACHERECHNUNGENTEST_RESULTS: "${{steps.einfacherechnungentest.outputs.result}}"
+          LOHNBERECHNUNGENTEST_RESULTS: "${{steps.lohnberechnungentest.outputs.result}}"
+          BETRIEBSKOSTENRECHNERTEST_RESULTS: "${{steps.betriebskostenrechnertest.outputs.result}}"
+          ANGEBOTSERSTELLUNGTEST_RESULTS: "${{steps.angebotserstellungtest.outputs.result}}"
+          WECHSELGELD_BERECHNUNGTEST_RESULTS: "${{steps.wechselgeld_berechnungtest.outputs.result}}"
+        with:
+          runners: tictactoetest,einfacherechnungentest,lohnberechnungentest,betriebskostenrechnertest,angebotserstellungtest,wechselgeld_berechnungtest
