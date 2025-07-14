@@ -86,6 +86,12 @@ jobs:
               "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=sqale_rating" \
               | jq -r '.component.measures[0].value // "5"')
 
+            # Defaults setzen, falls leer
+            CODE_SMELLS=${CODE_SMELLS:-0}
+            BUGS=${BUGS:-0}
+            VULNERABILITIES=${VULNERABILITIES:-0}
+            MAINTAINABILITY=${MAINTAINABILITY:-5}
+
             echo "Code Smells: $CODE_SMELLS"
             echo "Bugs: $BUGS"
             echo "Vulnerabilities: $VULNERABILITIES"
