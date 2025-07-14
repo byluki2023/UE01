@@ -42,6 +42,75 @@ jobs:
       - name: Build & install Student Project
         run: mvn clean install --batch-mode
 
+      # ---- SONARQUBE ANALYSE ----
+      - name: SonarQube Analysis
+        id: sonarqubecheck
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: SonarQubeCheck
+          setup-command: ""
+          command: |
+            mvn sonar:sonar \
+              -Dsonar.projectKey=byluki2023_UE01_noTests-${{ github.event.repository.name }} \
+              -Dsonar.organization=byluki2023 \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+              --batch-mode
+          timeout: 10
+          max-score: 0
+
+      # ---- ADVANCED SONARQUBE QUALITY CHECK ----
+      - name: Advanced Code Quality Test
+        id: advancedcodequalitytest
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Advanced Code Quality Test
+          setup-command: |
+            sudo apt-get update && sudo apt-get install -y jq bc
+          command: |
+            PROJECT_KEY="byluki2023_UE01_noTests-${{ github.event.repository.name }}"
+
+            CODE_SMELLS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=code_smells" \
+              | jq -r '.component.measures[0].value // "0"')
+
+            BUGS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=bugs" \
+              | jq -r '.component.measures[0].value // "0"')
+
+            VULNERABILITIES=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=vulnerabilities" \
+              | jq -r '.component.measures[0].value // "0"')
+
+            MAINTAINABILITY=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=sqale_rating" \
+              | jq -r '.component.measures[0].value // "5"')
+
+            echo "Code Smells: $CODE_SMELLS"
+            echo "Bugs: $BUGS"
+            echo "Vulnerabilities: $VULNERABILITIES"
+            echo "Maintainability Rating: $MAINTAINABILITY"
+
+            SCORE=0
+
+            if [ "$CODE_SMELLS" -le 1 ]; then SCORE=$((SCORE + 1)); fi
+            if [ "$BUGS" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
+            if [ "$VULNERABILITIES" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
+            if [ "$MAINTAINABILITY" -le 2 ]; then SCORE=$((SCORE + 1)); fi
+
+            echo "Quality Score: $SCORE/4"
+
+            if [ $SCORE -ge 3 ]; then
+              echo "✅ Excellent code quality!"
+              exit 0
+            else
+              echo "❌ Code quality needs improvement"
+              exit 1
+            fi
+          timeout: 10
+          max-score: 4
+
+      # ---- TEST CASES ----
       - name: TicTacToeTest
         id: tictactoetest
         uses: classroom-resources/autograding-command-grader@v1
@@ -105,6 +174,8 @@ jobs:
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
+          SONARQUBECHECK_RESULTS: "${{steps.sonarqubecheck.outputs.result}}"
+          ADVANCEDCODEQUALITYTEST_RESULTS: "${{steps.advancedcodequalitytest.outputs.result}}"
           TICTACTOETEST_RESULTS: "${{steps.tictactoetest.outputs.result}}"
           EINFACHERECHNUNGENTEST_RESULTS: "${{steps.einfacherechnungentest.outputs.result}}"
           LOHNBERECHNUNGENTEST_RESULTS: "${{steps.lohnberechnungentest.outputs.result}}"
@@ -112,4 +183,4 @@ jobs:
           ANGEBOTSERSTELLUNGTEST_RESULTS: "${{steps.angebotserstellungtest.outputs.result}}"
           WECHSELGELD_BERECHNUNGTEST_RESULTS: "${{steps.wechselgeld_berechnungtest.outputs.result}}"
         with:
-          runners: tictactoetest,einfacherechnungentest,lohnberechnungentest,betriebskostenrechnertest,angebotserstellungtest,wechselgeld_berechnungtest
+          runners: sonarqubecheck,advancedcodequalitytest,tictactoetest,einfacherechnungentest,lohnberechnungentest,betriebskostenrechnertest,angebotserstellungtest,wechselgeld_berechnungtest
