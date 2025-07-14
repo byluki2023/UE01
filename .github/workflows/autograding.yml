@@ -20,23 +20,35 @@ jobs:
       - name: Checkout Student Repo Code
         uses: actions/checkout@v4
 
-      - name: Checkout Private Tests Repo
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Checkout Tests Repo
         uses: actions/checkout@v4
         with:
           repository: byluki2023/UE01_AllTests
-          token: ${{ secrets.TESTS_REPO_TOKEN }}
           path: tests
 
       - name: Build & install Student Project
-        run: mvn clean install
+        run: mvn clean install --batch-mode
 
       - name: TicTacToeTest
         id: tictactoetest
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: TicTacToeTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A01_TicTacToeTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A01_TicTacToeTest --batch-mode
           timeout: 5
           max-score: 4
 
@@ -45,8 +57,8 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: EinfacheRechnungenTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A02_EinfacheRechnungenTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A02_EinfacheRechnungenTest --batch-mode
           timeout: 5
           max-score: 4
 
@@ -55,8 +67,8 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: LohnberechnungenTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A03_LohnberechnungenTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A03_LohnberechnungenTest --batch-mode
           timeout: 5
           max-score: 4
 
@@ -65,8 +77,8 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: BetriebskostenrechnerTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A04_BetriebskostenrechnerTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A04_BetriebskostenrechnerTest --batch-mode
           timeout: 5
           max-score: 4
 
@@ -75,8 +87,8 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: AngebotserstellungTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A05_AngebotserstellungTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A05_AngebotserstellungTest --batch-mode
           timeout: 5
           max-score: 4
 
@@ -85,8 +97,8 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: Wechselgeld_BerechnungTest
-          setup-command: mvn clean install
-          command: cd tests && mvn test -Dtest=A06_Wechselgeld_BerechnungTest
+          setup-command: ""
+          command: cd tests && mvn test -Dtest=A06_Wechselgeld_BerechnungTest --batch-mode
           timeout: 5
           max-score: 4
 
