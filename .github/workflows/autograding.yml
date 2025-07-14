@@ -52,6 +52,7 @@ jobs:
           command: |
             mvn sonar:sonar \
               -Dsonar.projectKey=byluki2023_UE01_noTests-${{ github.event.repository.name }} \
+              -Dsonar.projectName=${{ github.event.repository.name }} \
               -Dsonar.organization=byluki2023 \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
