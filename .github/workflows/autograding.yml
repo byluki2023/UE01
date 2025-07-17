@@ -204,4 +204,4 @@ jobs:
         uses: markpatterson27/points-bar@v1
         with:
           points: '24/24'
-          path: 'points-bar.svg'
+          path: 'README.md/points-bar.svg'
