@@ -189,15 +189,7 @@ jobs:
       - name: Generate Points Bar in README
         uses: markpatterson27/points-bar@v1
         with:
-          points: '[
-            {"name":"A01_Tests","score":4,"earned":4},
-            {"name":"A02_Tests","score":4,"earned":4},
-            {"name":"A03_Tests","score":4,"earned":4},
-            {"name":"A04_Tests","score":4,"earned":4},
-            {"name":"A05_Tests","score":4,"earned":4},
-            {"name":"A06_Tests","score":4,"earned":4},
-            {"name":"Bonus (Codequalität)","score":3,"earned":3}
-          ]'
+          points: '24/24'
           path: 'points-bar.svg'
 
       - name: Autograding Reporter
