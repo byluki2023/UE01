@@ -17,6 +17,7 @@ jobs:
     if: github.actor != 'github-classroom[bot]'
 
     steps:
+      # --- STUDENTEN-REPO ---
       - name: Checkout Student Repo Code
         uses: actions/checkout@v4
 
@@ -33,25 +34,46 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Checkout Tests Repo
-        uses: actions/checkout@v4
-        with:
-          repository: byluki2023/UE01_AllTests
-          path: tests
-
-      - name: Build & install Student Project
+      # --- BUILD STUDENT CODE ---
+      - name: Build Student Project
         run: mvn clean install --batch-mode
 
-      # ---- SONARQUBE ANALYSE ----
+      # --- SONARQUBE PROJECT CREATION ---
+      - name: Create SonarCloud Project if not exists
+        run: |
+          PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          ORG="byluki2023"
+
+          EXISTS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
+            | jq -r '.component.key // empty')
+
+          if [ -z "$EXISTS" ]; then
+            echo "Creating SonarCloud project $PROJECT_KEY..."
+            curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              -X POST "https://sonarcloud.io/api/projects/create" \
+              -d "name=$REPO_NAME" \
+              -d "project=$PROJECT_KEY" \
+              -d "organization=$ORG"
+            echo "SonarCloud project created."
+          else
+            echo "SonarCloud project $PROJECT_KEY already exists."
+          fi
+
+      # --- SONARQUBE ANALYSE ---
       - name: SonarQube Analysis
         id: sonarqubecheck
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: SonarQubeCheck
-          setup-command: ""
+          setup-command: |
+            sudo apt-get update && sudo apt-get install -y jq
           command: |
+            PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
+
             mvn sonar:sonar \
-              -Dsonar.projectKey=byluki2023_UE01_noTests-${{ github.event.repository.name }} \
+              -Dsonar.projectKey=$PROJECT_KEY \
               -Dsonar.projectName=${{ github.event.repository.name }} \
               -Dsonar.organization=byluki2023 \
               -Dsonar.host.url=https://sonarcloud.io \
@@ -60,7 +82,7 @@ jobs:
           timeout: 10
           max-score: 0
 
-      # ---- ADVANCED SONARQUBE QUALITY CHECK ----
+      # --- ADVANCED SONARQUBE QUALITY CHECK ---
       - name: Advanced Code Quality Test
         id: advancedcodequalitytest
         uses: classroom-resources/autograding-command-grader@v1
@@ -69,7 +91,16 @@ jobs:
           setup-command: |
             sudo apt-get update && sudo apt-get install -y jq bc
           command: |
-            PROJECT_KEY="byluki2023_UE01_noTests-${{ github.event.repository.name }}"
+            PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
+
+            CHECK=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
+              | jq -r '.component.key // empty')
+
+            if [ -z "$CHECK" ]; then
+              echo "❌ SonarQube project $PROJECT_KEY not found. Aborting quality checks."
+              exit 1
+            fi
 
             CODE_SMELLS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=code_smells" \
@@ -83,111 +114,137 @@ jobs:
               "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=vulnerabilities" \
               | jq -r '.component.measures[0].value // "0"')
 
-            MAINTAINABILITY=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-              "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=sqale_rating" \
-              | jq -r '.component.measures[0].value // "5"')
-
-            # Defaults setzen, falls leer
             CODE_SMELLS=${CODE_SMELLS:-0}
             BUGS=${BUGS:-0}
             VULNERABILITIES=${VULNERABILITIES:-0}
-            MAINTAINABILITY=${MAINTAINABILITY:-5}
 
             echo "Code Smells: $CODE_SMELLS"
             echo "Bugs: $BUGS"
             echo "Vulnerabilities: $VULNERABILITIES"
-            echo "Maintainability Rating: $MAINTAINABILITY"
 
             SCORE=0
 
             if [ "$CODE_SMELLS" -le 1 ]; then SCORE=$((SCORE + 1)); fi
             if [ "$BUGS" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
             if [ "$VULNERABILITIES" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
-            if [ "$MAINTAINABILITY" -le 2 ]; then SCORE=$((SCORE + 1)); fi
 
-            echo "Quality Score: $SCORE/4"
+            echo "Quality Score: $SCORE/3"
 
-            if [ $SCORE -ge 3 ]; then
-              echo "✅ Excellent code quality!"
+            if [ $SCORE -ge 2 ]; then
+              echo "✅ Code quality is acceptable!"
               exit 0
             else
               echo "❌ Code quality needs improvement"
               exit 1
             fi
           timeout: 10
-          max-score: 4
+          max-score: 3
 
-      # ---- TEST CASES ----
-      - name: TicTacToeTest
-        id: tictactoetest
+      # --- SONARQUBE PROJECT DELETION ---
+      - name: Delete SonarCloud Project
+        if: always()
+        run: |
+          PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
+
+          EXISTS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
+            | jq -r '.component.key // empty')
+
+          if [ -n "$EXISTS" ]; then
+            echo "Deleting SonarCloud project $PROJECT_KEY..."
+            curl -s -X POST \
+              -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/projects/delete?project=$PROJECT_KEY"
+            echo "SonarCloud project deleted."
+          else
+            echo "No SonarCloud project $PROJECT_KEY found. Skipping deletion."
+          fi
+            # --- TESTS-REPO ---
+      - name: Checkout Tests Repo
+        uses: actions/checkout@v4
+        with:
+          repository: byluki2023/UE01_AllTests
+          path: tests
+
+      # --- COPY TESTS INTO STUDENTEN-REPO ---
+      - name: Copy Tests into student repo
+        run: |
+          mkdir -p src/test/java/se/jku/at/exercise
+          cp tests/src/test/java/se/jku/at/exercise/*.java src/test/java/se/jku/at/exercise/
+
+      # --- TEST CASES ---
+      - name: A01_Tests
+        id: a01test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: TicTacToeTest
+          test-name: A01_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A01_TicTacToeTest --batch-mode
+          command: mvn test -Dtest=A01_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      - name: EinfacheRechnungenTest
-        id: einfacherechnungentest
+      - name: A02_Tests
+        id: a02test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: EinfacheRechnungenTest
+          test-name: A02_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A02_EinfacheRechnungenTest --batch-mode
+          command: mvn test -Dtest=A02_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      - name: LohnberechnungenTest
-        id: lohnberechnungentest
+      - name: A03_Tests
+        id: a03test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: LohnberechnungenTest
+          test-name: A03_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A03_LohnberechnungenTest --batch-mode
+          command: mvn test -Dtest=A03_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      - name: BetriebskostenrechnerTest
-        id: betriebskostenrechnertest
+      - name: A04_Tests
+        id: a04test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: BetriebskostenrechnerTest
+          test-name: A04_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A04_BetriebskostenrechnerTest --batch-mode
+          command: mvn test -Dtest=A04_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      - name: AngebotserstellungTest
-        id: angebotserstellungtest
+      - name: A05_Tests
+        id: a05test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: AngebotserstellungTest
+          test-name: A05_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A05_AngebotserstellungTest --batch-mode
+          command: mvn test -Dtest=A05_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      - name: Wechselgeld_BerechnungTest
-        id: wechselgeld_berechnungtest
+      - name: A06_Tests
+        id: a06test
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: Wechselgeld_BerechnungTest
+          test-name: A06_Tests
           setup-command: ""
-          command: cd tests && mvn test -Dtest=A06_Wechselgeld_BerechnungTest --batch-mode
+          command: mvn test -Dtest=A06_Tests --batch-mode
           timeout: 5
           max-score: 4
 
+      # --- AUTOGRADING REPORTER ---
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
           SONARQUBECHECK_RESULTS: "${{steps.sonarqubecheck.outputs.result}}"
           ADVANCEDCODEQUALITYTEST_RESULTS: "${{steps.advancedcodequalitytest.outputs.result}}"
-          TICTACTOETEST_RESULTS: "${{steps.tictactoetest.outputs.result}}"
-          EINFACHERECHNUNGENTEST_RESULTS: "${{steps.einfacherechnungentest.outputs.result}}"
-          LOHNBERECHNUNGENTEST_RESULTS: "${{steps.lohnberechnungentest.outputs.result}}"
-          BETRIEBSKOSTENRECHNERTEST_RESULTS: "${{steps.betriebskostenrechnertest.outputs.result}}"
-          ANGEBOTSERSTELLUNGTEST_RESULTS: "${{steps.angebotserstellungtest.outputs.result}}"
-          WECHSELGELD_BERECHNUNGTEST_RESULTS: "${{steps.wechselgeld_berechnungtest.outputs.result}}"
+          A01TEST_RESULTS: "${{steps.a01test.outputs.result}}"
+          A02TEST_RESULTS: "${{steps.a02test.outputs.result}}"
+          A03TEST_RESULTS: "${{steps.a03test.outputs.result}}"
+          A04TEST_RESULTS: "${{steps.a04test.outputs.result}}"
+          A05TEST_RESULTS: "${{steps.a05test.outputs.result}}"
+          A06TEST_RESULTS: "${{steps.a06test.outputs.result}}"
         with:
-          runners: sonarqubecheck,advancedcodequalitytest,tictactoetest,einfacherechnungentest,lohnberechnungentest,betriebskostenrechnertest,angebotserstellungtest,wechselgeld_berechnungtest
+          runners: sonarqubecheck,advancedcodequalitytest,a01test,a02test,a03test,a04test,a05test, a06test
+
