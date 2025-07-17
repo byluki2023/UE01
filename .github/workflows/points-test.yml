@@ -1,0 +1,18 @@
+name: Points Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-points-bar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Static Points Bar
+        uses: markpatterson27/points-bar@v1
+        with:
+          points: '[{"name":"Test","score":10,"earned":7}]'
