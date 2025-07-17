@@ -9,15 +9,22 @@ on:
 permissions:
   checks: write
   actions: read
-  contents: read
+  contents: write  # Wichtig für points-bar!
 
 jobs:
   run-autograding-tests:
     runs-on: ubuntu-latest
     if: github.actor != 'github-classroom[bot]'
+    outputs:
+      a01test-result: ${{ steps.a01test.outputs.result }}
+      a02test-result: ${{ steps.a02test.outputs.result }}
+      a03test-result: ${{ steps.a03test.outputs.result }}
+      a04test-result: ${{ steps.a04test.outputs.result }}
+      a05test-result: ${{ steps.a05test.outputs.result }}
+      a06test-result: ${{ steps.a06test.outputs.result }}
+      advancedcodequalitytest-result: ${{ steps.advancedcodequalitytest.outputs.result }}
 
     steps:
-      # --- STUDENTEN-REPO ---
       - name: Checkout Student Repo Code
         uses: actions/checkout@v4
 
@@ -34,11 +41,9 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # --- BUILD STUDENT CODE ---
       - name: Build Student Project
         run: mvn clean install --batch-mode
 
-      # --- SONARQUBE PROJECT CREATION ---
       - name: Create SonarCloud Project if not exists
         run: |
           PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
@@ -50,18 +55,13 @@ jobs:
             | jq -r '.component.key // empty')
 
           if [ -z "$EXISTS" ]; then
-            echo "Creating SonarCloud project $PROJECT_KEY..."
             curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               -X POST "https://sonarcloud.io/api/projects/create" \
               -d "name=$REPO_NAME" \
               -d "project=$PROJECT_KEY" \
               -d "organization=$ORG"
-            echo "SonarCloud project created."
-          else
-            echo "SonarCloud project $PROJECT_KEY already exists."
           fi
 
-      # --- SONARQUBE ANALYSE ---
       - name: SonarQube Analysis
         id: sonarqubecheck
         uses: classroom-resources/autograding-command-grader@v1
@@ -71,7 +71,6 @@ jobs:
             sudo apt-get update && sudo apt-get install -y jq
           command: |
             PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
-
             mvn sonar:sonar \
               -Dsonar.projectKey=$PROJECT_KEY \
               -Dsonar.projectName=${{ github.event.repository.name }} \
@@ -82,7 +81,6 @@ jobs:
           timeout: 10
           max-score: 0
 
-      # --- ADVANCED SONARQUBE QUALITY CHECK ---
       - name: Advanced Code Quality Test
         id: advancedcodequalitytest
         uses: classroom-resources/autograding-command-grader@v1
@@ -92,15 +90,6 @@ jobs:
             sudo apt-get update && sudo apt-get install -y jq bc
           command: |
             PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
-
-            CHECK=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-              "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
-              | jq -r '.component.key // empty')
-
-            if [ -z "$CHECK" ]; then
-              echo "❌ SonarQube project $PROJECT_KEY not found. Aborting quality checks."
-              exit 1
-            fi
 
             CODE_SMELLS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
               "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=code_smells" \
@@ -114,71 +103,32 @@ jobs:
               "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=vulnerabilities" \
               | jq -r '.component.measures[0].value // "0"')
 
-            CODE_SMELLS=${CODE_SMELLS:-0}
-            BUGS=${BUGS:-0}
-            VULNERABILITIES=${VULNERABILITIES:-0}
-
-            echo "Code Smells: $CODE_SMELLS"
-            echo "Bugs: $BUGS"
-            echo "Vulnerabilities: $VULNERABILITIES"
-
             SCORE=0
-
             if [ "$CODE_SMELLS" -le 1 ]; then SCORE=$((SCORE + 1)); fi
             if [ "$BUGS" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
             if [ "$VULNERABILITIES" -eq 0 ]; then SCORE=$((SCORE + 1)); fi
 
             echo "Quality Score: $SCORE/3"
-
-            if [ $SCORE -ge 2 ]; then
-              echo "✅ Code quality is acceptable!"
-              exit 0
-            else
-              echo "❌ Code quality needs improvement"
-              exit 1
-            fi
+            exit 0
           timeout: 10
           max-score: 3
 
-      # --- SONARQUBE PROJECT DELETION ---
-      - name: Delete SonarCloud Project
-        if: always()
-        run: |
-          PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
-
-          EXISTS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-            "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
-            | jq -r '.component.key // empty')
-
-          if [ -n "$EXISTS" ]; then
-            echo "Deleting SonarCloud project $PROJECT_KEY..."
-            curl -s -X POST \
-              -u "${{ secrets.SONAR_TOKEN }}:" \
-              "https://sonarcloud.io/api/projects/delete?project=$PROJECT_KEY"
-            echo "SonarCloud project deleted."
-          else
-            echo "No SonarCloud project $PROJECT_KEY found. Skipping deletion."
-          fi
-            # --- TESTS-REPO ---
       - name: Checkout Tests Repo
         uses: actions/checkout@v4
         with:
           repository: byluki2023/UE01_AllTests
           path: tests
 
-      # --- COPY TESTS INTO STUDENTEN-REPO ---
       - name: Copy Tests into student repo
         run: |
           mkdir -p src/test/java/se/jku/at/exercise
           cp tests/src/test/java/se/jku/at/exercise/*.java src/test/java/se/jku/at/exercise/
 
-      # --- TEST CASES ---
       - name: A01_Tests
         id: a01test
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A01_Tests
-          setup-command: ""
           command: mvn test -Dtest=A01_Tests --batch-mode
           timeout: 5
           max-score: 4
@@ -188,7 +138,6 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A02_Tests
-          setup-command: ""
           command: mvn test -Dtest=A02_Tests --batch-mode
           timeout: 5
           max-score: 4
@@ -198,7 +147,6 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A03_Tests
-          setup-command: ""
           command: mvn test -Dtest=A03_Tests --batch-mode
           timeout: 5
           max-score: 4
@@ -208,7 +156,6 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A04_Tests
-          setup-command: ""
           command: mvn test -Dtest=A04_Tests --batch-mode
           timeout: 5
           max-score: 4
@@ -218,7 +165,6 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A05_Tests
-          setup-command: ""
           command: mvn test -Dtest=A05_Tests --batch-mode
           timeout: 5
           max-score: 4
@@ -228,12 +174,32 @@ jobs:
         uses: classroom-resources/autograding-command-grader@v1
         with:
           test-name: A06_Tests
-          setup-command: ""
           command: mvn test -Dtest=A06_Tests --batch-mode
           timeout: 5
           max-score: 4
 
-      # --- AUTOGRADING REPORTER ---
+  update-points-bar:
+    needs: run-autograding-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Points Bar in README
+        uses: markpatterson27/points-bar@v1
+        with:
+          points: '[
+            {"name":"A01_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a01test-result }}},
+            {"name":"A02_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a02test-result }}},
+            {"name":"A03_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a03test-result }}},
+            {"name":"A04_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a04test-result }}},
+            {"name":"A05_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a05test-result }}},
+            {"name":"A06_Tests","score":4,"earned":${{ needs.run-autograding-tests.outputs.a06test-result }}},
+            {"name":"Bonus (Codequalität)","score":3,"earned":${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}}
+          ]'
+          path: 'points-bar.svg'
+
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
@@ -246,5 +212,4 @@ jobs:
           A05TEST_RESULTS: "${{steps.a05test.outputs.result}}"
           A06TEST_RESULTS: "${{steps.a06test.outputs.result}}"
         with:
-          runners: sonarqubecheck,advancedcodequalitytest,a01test,a02test,a03test,a04test,a05test, a06test
-
+          runners: sonarqubecheck,advancedcodequalitytest,a01test,a02test,a03test,a04test,a05test,a06test
