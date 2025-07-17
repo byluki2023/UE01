@@ -15,5 +15,5 @@ jobs:
       - name: Generate Static Points Bar
         uses: markpatterson27/points-bar@v1
         with:
-          points: '[{"name":"Test","score":10,"earned":7}]'
+          points: '23/24'
           path: 'points-bar.svg'
