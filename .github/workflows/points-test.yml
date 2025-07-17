@@ -16,3 +16,4 @@ jobs:
         uses: markpatterson27/points-bar@v1
         with:
           points: '[{"name":"Test","score":10,"earned":7}]'
+          path: 'points-bar.svg'
