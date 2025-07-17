@@ -4,7 +4,7 @@ import se.jku.at.inout.In;
 import se.jku.at.inout.Out;
 
 public class A03_Lohnberechnungen {
-    static final boolean useInput = false; // internal use only for easier testing
+    static final boolean useInput = true; // internal use only for easier testing
     static final int BASE_SALARY_MR = 40_000;
     static final int BASE_SALARY_MS = 42_000;
     static final int BONUS_MR = 1_000;
@@ -33,14 +33,14 @@ public class A03_Lohnberechnungen {
 
         if (isFormatted) {
             Out.println("Gehaltsberechnung");
-            Out.println("Frau Moser: ");
+            Out.println("Frau Moser:");
             Out.println(" Grundgehalt:          " + String.format("%,10d", BASE_SALARY_MS) + " Euro");
             Out.println(" Bonus:                " + String.format("%,10d", BONUS_MS) + " Euro");
             Out.println(" Montage:              " + String.format("%,10d", (noAssemblyMs * ASSEMBLY_MS))
                     + " Euro (" + noAssemblyMs + "*" + ASSEMBLY_MS + ")");
             Out.println(" Gesamt:               " + String.format("%,10d", incomeMs) + " Euro");
 
-            Out.println("Herr Moser: ");
+            Out.println("Herr Moser:");
             Out.println(" Grundgehalt:          " + String.format("%,10d", BASE_SALARY_MR) + " Euro");
             Out.println(" Bonus:                " + String.format("%,10d", BONUS_MR) + " Euro");
             Out.println(" Montage:              " + String.format("%,10d", (noAssemblyMr * ASSEMBLY_MR))

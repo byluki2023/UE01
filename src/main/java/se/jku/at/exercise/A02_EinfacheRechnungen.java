@@ -26,13 +26,13 @@ public class A02_EinfacheRechnungen {
         Out.print("Zahl für Multiplikation eingeben: ");
         number2 = In.readInt();
         result = number1 * number2;
-        Out.println("Subtraktion: " + number1 + " * " + number2 + " = " + result);
+        Out.println("Multiplikation: " + number1 + " * " + number2 + " = " + result);
 
         number1 = result;
         Out.print("Zahl für Division eingeben: ");
         number2 = In.readInt();
         result = number1 / number2;
-        Out.println("Subtraktion: " + number1 + " / " + number2 + " = " + result);
+        Out.println("Division: " + number1 + " / " + number2 + " = " + result);
 
         number1 = result;
         Out.print("Zahl für Divisionsrest eingeben: ");

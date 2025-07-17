@@ -4,7 +4,7 @@ import se.jku.at.inout.In;
 import se.jku.at.inout.Out;
 
 public class A05_Angebotserstellung {
-    static final boolean useInput = false; // internal use only for easier testing
+    static final boolean useInput = true; // internal use only for easier testing
     static final double COST_PER_SQM = 12.50;
     static final double EXTRA_ROOM_UP_TO_40 = 34.00;
     static final double EXTRA_ROOM_UP_TO_80 = 123.00;

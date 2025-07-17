@@ -4,7 +4,7 @@ import se.jku.at.inout.In;
 import se.jku.at.inout.Out;
 
 public class A06_Wechselgeld_Berechnung {
-    static final boolean useInput = false; // internal use only for easier testing
+    static final boolean useInput = true; // internal use only for easier testing
     public static void main(String[] args) {
         int dollars,cents,rest;
 
