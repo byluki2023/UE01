@@ -178,20 +178,6 @@ jobs:
           timeout: 5
           max-score: 4
 
-  update-points-bar:
-    needs: run-autograding-tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate Points Bar in README
-        uses: markpatterson27/points-bar@v1
-        with:
-          points: '24/24'
-          path: 'points-bar.svg'
-
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
@@ -205,3 +191,25 @@ jobs:
           A06TEST_RESULTS: "${{steps.a06test.outputs.result}}"
         with:
           runners: sonarqubecheck,advancedcodequalitytest,a01test,a02test,a03test,a04test,a05test,a06test
+
+  update-points-bar:
+    needs: run-autograding-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Points Bar in README
+        uses: markpatterson27/points-bar@v1
+        with:
+          points: '[
+            {"name":"A01_Tests","score":4,"earned":4},
+            {"name":"A02_Tests","score":4,"earned":4},
+            {"name":"A03_Tests","score":4,"earned":4},
+            {"name":"A04_Tests","score":4,"earned":4},
+            {"name":"A05_Tests","score":4,"earned":4},
+            {"name":"A06_Tests","score":4,"earned":4},
+            {"name":"Bonus (Codequalität)","score":3,"earned":3}
+          ]'
+          path: 'README.md/points-bar.svg'
