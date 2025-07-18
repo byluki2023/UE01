@@ -45,7 +45,7 @@ jobs:
     permissions:
       contents: write
     with:
-      points: '10/24'
+      points: '15/24'
       path: 'icons/points-bar.svg'  # Angepasst für deinen README-Link
       type: 'bar'
       bar-color: '#4c1'
