@@ -9,7 +9,7 @@ Die Angabe findest du in PDF-Form im Ordner "Angabe".
 ## Punktestand
 ![Points bar](../../blob/status/.github/icons/points-bar.svg)
 
-Achtung!  
+Achtung! Grafik ladet manchmal nicht von selbst.  
 Cache leeren:  
 Windows/Linux: Strg + F5 oder Strg + Shift + R  
 Mac: Cmd + Shift + R
