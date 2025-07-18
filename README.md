@@ -1,4 +1,3 @@
-![Points bar](https://raw.githubusercontent.com/byluki2023/UE01/status/icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
@@ -6,9 +5,14 @@ Die Tests laufen automatisch nach jedem Push.
 Die Angabe findest du in PDF-Form im Ordner "Angabe".
 
 ---
-![Points bar](../../blob/status/icons/points-bar.svg)
-## Punktestand
 
+## Punktestand
+![Points bar](../../blob/status/icons/points-bar.svg)
+
+Achtung!
+Cache leeren:
+Windows/Linux: Strg + F5 oder Strg + Shift + R
+Mac: Cmd + Shift + R
 ---
 
 ## Bewertungsskala
