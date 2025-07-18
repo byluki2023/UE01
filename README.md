@@ -1,4 +1,4 @@
-![Points bar](https://raw.githubusercontent.com/byluki2023/UE01/status/icons/points-bar.svg)
+![Points bar](../../blob/status/icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
