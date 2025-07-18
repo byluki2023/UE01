@@ -211,14 +211,14 @@ jobs:
         id: calculate-points
         run: |
           # Extract and decode scores from test results (they are base64 encoded)
-          # Using printf to handle the base64 input properly
-          A01_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d | jq -r '.score // 0')
-          A02_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a02test-result }}' | base64 -d | jq -r '.score // 0')
-          A03_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a03test-result }}' | base64 -d | jq -r '.score // 0')
-          A04_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a04test-result }}' | base64 -d | jq -r '.score // 0')
-          A05_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a05test-result }}' | base64 -d | jq -r '.score // 0')
-          A06_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a06test-result }}' | base64 -d | jq -r '.score // 0')
-          QUALITY_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | base64 -d | jq -r '.score // 0')
+          # The score is located in .tests[0].score, not directly in .score
+          A01_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A02_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a02test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A03_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a03test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A04_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a04test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A05_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a05test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A06_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a06test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          QUALITY_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           
           # Debug output - show raw and decoded values
           echo "Raw A01 result: ${{ needs.run-autograding-tests.outputs.a01test-result }}"
