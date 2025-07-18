@@ -43,7 +43,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add '.github/icons/points-bar.svg'
+          git add 'icons/points-bar.svg'
           git commit -m "Add/Update points bar" || exit 0
           # Verwende GITHUB_TOKEN statt GH_PAT
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
