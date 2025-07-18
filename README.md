@@ -1,3 +1,4 @@
+![Points bar](../../blob/badges/icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
@@ -7,7 +8,7 @@ Die Angabe findest du in PDF-Form im Ordner "Angabe".
 ---
 
 ## Punktestand
-![Points bar](../../blob/badges/icons/points-bar.svg)
+
 ---
 
 ## Bewertungsskala
