@@ -28,15 +28,14 @@ jobs:
         uses: markpatterson27/points-bar@v1
         with:
           points: '24/24'
-          path: '.github/icons/points-bar.svg'
+          path: 'icons/points-bar.svg'
 
       # commit and push badges if badges have changed
       - name: Commit changes to points bar
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add '.github/icons/points-bar.svg'
+          git add 'icons/points-bar.svg'
           git commit -m "Add/Update points bar" || exit 0
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/byluki2023/UE01.git
           git push origin badges
           
