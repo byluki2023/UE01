@@ -1,4 +1,4 @@
-![Points bar](../../blob/status/icons/points-bar.svg?raw=true)
+![Points bar](../../blob/status/icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
