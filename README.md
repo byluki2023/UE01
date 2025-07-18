@@ -9,10 +9,11 @@ Die Angabe findest du in PDF-Form im Ordner "Angabe".
 ## Punktestand
 ![Points bar](../../blob/status/icons/points-bar.svg)
 
-Achtung!  
-Cache leeren:  
-Windows/Linux: Strg + F5 oder Strg + Shift + R  
+Achtung!
+Cache leeren:
+Windows/Linux: Strg + F5 oder Strg + Shift + R
 Mac: Cmd + Shift + R
+
 ---
 
 ## Bewertungsskala
