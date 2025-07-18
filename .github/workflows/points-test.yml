@@ -1,4 +1,4 @@
-name: GitHub Classroom Workflow
+name: My Workflow
 
 # Erweiterte Berechtigungen für den Workflow
 permissions:
@@ -6,45 +6,27 @@ permissions:
   actions: read
   checks: write
 
-on: 
+on:
   push:
     branches:
     - '*'
-    - '!badges'
+    - '!status'
 
 jobs:
-  build:
-    name: Autograding
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
-          # Verwende GITHUB_TOKEN statt GH_PAT
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      # add id to action so outputs can be used
-      - uses: education/autograding@v1
-        id: autograder
-        continue-on-error: true
-      
-      # switch to badges branch
-      - run: git checkout badges || git checkout -b badges
-      
-      # create points bar
-      - name: points bar
-        uses: markpatterson27/points-bar@v1
-        with:
-          points: '20/24'
-          path: 'icons/points-bar.svg'
-      
-      # commit and push badges if badges have changed
-      - name: Commit changes to points bar
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add 'icons/points-bar.svg'
-          git commit -m "Add/Update points bar" || exit 0
-          # Verwende GITHUB_TOKEN statt GH_PAT
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push origin badges
+  update-points-bar:
+    uses: markpatterson27/points-bar/.github/workflows/reusable-workflow.yml@main
+    permissions:
+      contents: write
+    with:
+      points: '10/20'
+      path: 'icons/points-bar.svg'  # Angepasst für deinen README-Link
+      type: 'bar'
+      bar-color: '#4c1'
+      bar-background: '#555'
+      font-color: '#aaa'
+      label: 'Points'
+      width: '100'
+      reverse: false
+      branch: status
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
