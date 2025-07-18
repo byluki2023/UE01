@@ -210,16 +210,19 @@ jobs:
       - name: Calculate Points
         id: calculate-points
         run: |
-          # Extract scores from test results (they are JSON strings, not base64 encoded)
-          A01_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a01test-result }}' | jq -r '.score // 0')
-          A02_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a02test-result }}' | jq -r '.score // 0')
-          A03_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a03test-result }}' | jq -r '.score // 0')
-          A04_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a04test-result }}' | jq -r '.score // 0')
-          A05_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a05test-result }}' | jq -r '.score // 0')
-          A06_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.a06test-result }}' | jq -r '.score // 0')
-          QUALITY_SCORE=$(echo '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | jq -r '.score // 0')
+          # Extract and decode scores from test results (they are base64 encoded)
+          # Using printf to handle the base64 input properly
+          A01_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d | jq -r '.score // 0')
+          A02_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a02test-result }}' | base64 -d | jq -r '.score // 0')
+          A03_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a03test-result }}' | base64 -d | jq -r '.score // 0')
+          A04_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a04test-result }}' | base64 -d | jq -r '.score // 0')
+          A05_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a05test-result }}' | base64 -d | jq -r '.score // 0')
+          A06_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a06test-result }}' | base64 -d | jq -r '.score // 0')
+          QUALITY_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | base64 -d | jq -r '.score // 0')
           
-          # Debug output
+          # Debug output - show raw and decoded values
+          echo "Raw A01 result: ${{ needs.run-autograding-tests.outputs.a01test-result }}"
+          echo "Decoded A01: $(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d)"
           echo "A01: $A01_SCORE, A02: $A02_SCORE, A03: $A03_SCORE"
           echo "A04: $A04_SCORE, A05: $A05_SCORE, A06: $A06_SCORE"
           echo "Quality: $QUALITY_SCORE"
