@@ -1,4 +1,4 @@
-![Points bar](../../blob/status/icons/points-bar.svg)
+![Points bar](https://github.com/byluki2023/UE01/blob/status/icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
@@ -6,7 +6,7 @@ Die Tests laufen automatisch nach jedem Push.
 Die Angabe findest du in PDF-Form im Ordner "Angabe".
 
 ---
-
+![Points bar](../../blob/status/icons/points-bar.svg)
 ## Punktestand
 
 ---
