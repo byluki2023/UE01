@@ -7,7 +7,7 @@ Die Angabe findest du in PDF-Form im Ordner "Angabe".
 ---
 
 ## Punktestand
-![Points bar](../../blob/status/icons/points-bar.svg)
+![Points bar](../../blob/status/.github/icons/points-bar.svg)
 
 Achtung!  
 Cache leeren:  
