@@ -1,4 +1,4 @@
-![Points bar](.github/icons/points-bar.svg)
+![Points bar](icons/points-bar.svg)
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
