@@ -1,7 +1,7 @@
 # Übung UE01
 
 Willkommen zu deiner ersten Programmierübung!  
-Die Tests laufen automatisch nach jedem Push.
+Die Tests laufen automatisch nach jedem Push.  
 Die Angabe findest du in PDF-Form im Ordner "Angabe".
 
 ---
