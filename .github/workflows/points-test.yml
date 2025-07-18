@@ -16,4 +16,4 @@ jobs:
         uses: markpatterson27/points-bar@v1.5.1
         with:
           points: '23/24'
-          path: 'points-bar.svg'
+          path: '.github/icons/points-bar.svg'
