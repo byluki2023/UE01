@@ -207,12 +207,42 @@ jobs:
           timeout: 5
           max-score: 4
 
+      # --- BEDINGTE PUNKTEBERECHNUNG FÜR REPORTER ---
+      - name: Calculate Test Score for Reporter
+        id: calculate-test-score
+        run: |
+          # Decode test results and calculate test score
+          A01_SCORE=$(printf '%s' '${{ steps.a01test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A02_SCORE=$(printf '%s' '${{ steps.a02test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A03_SCORE=$(printf '%s' '${{ steps.a03test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A04_SCORE=$(printf '%s' '${{ steps.a04test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A05_SCORE=$(printf '%s' '${{ steps.a05test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          A06_SCORE=$(printf '%s' '${{ steps.a06test.outputs.result }}' | base64 -d | jq -r '.tests[0].score // 0')
+          
+          TEST_SCORE=$((A01_SCORE + A02_SCORE + A03_SCORE + A04_SCORE + A05_SCORE + A06_SCORE))
+          
+          echo "Test Score: $TEST_SCORE"
+          echo "test_score=$TEST_SCORE" >> $GITHUB_OUTPUT
+          
+          # Set quality results based on test score
+          if [ $TEST_SCORE -ge 12 ]; then
+            echo "quality_results=${{ steps.advancedcodequalitytest.outputs.result }}" >> $GITHUB_OUTPUT
+            echo "include_quality=true" >> $GITHUB_OUTPUT
+            echo "✅ Including quality results in reporter"
+          else
+            # Create a dummy result with 0 score for quality test
+            DUMMY_RESULT=$(echo '{"version": 1, "tests": [{"name": "Advanced Code Quality Test", "score": 0, "max_score": 3, "status": "pass", "message": "Quality bonus not applied - insufficient test score"}]}' | base64 -w 0)
+            echo "quality_results=$DUMMY_RESULT" >> $GITHUB_OUTPUT
+            echo "include_quality=false" >> $GITHUB_OUTPUT
+            echo "❌ Quality bonus not applied - using dummy result"
+          fi
+
       # --- AUTOGRADING REPORTER ---
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
           SONARQUBECHECK_RESULTS: "${{steps.sonarqubecheck.outputs.result}}"
-          ADVANCEDCODEQUALITYTEST_RESULTS: "${{steps.advancedcodequalitytest.outputs.result}}"
+          ADVANCEDCODEQUALITYTEST_RESULTS: "${{steps.calculate-test-score.outputs.quality_results}}"
           A01TEST_RESULTS: "${{steps.a01test.outputs.result}}"
           A02TEST_RESULTS: "${{steps.a02test.outputs.result}}"
           A03TEST_RESULTS: "${{steps.a03test.outputs.result}}"
@@ -251,18 +281,29 @@ jobs:
           A06_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a06test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           QUALITY_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           
+          # Calculate test scores only (without quality)
+          TEST_SCORE=$((A01_SCORE + A02_SCORE + A03_SCORE + A04_SCORE + A05_SCORE + A06_SCORE))
+          
           # Debug output - show raw and decoded values
           echo "Raw A01 result: ${{ needs.run-autograding-tests.outputs.a01test-result }}"
           echo "Decoded A01: $(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d)"
           echo "A01: $A01_SCORE, A02: $A02_SCORE, A03: $A03_SCORE"
           echo "A04: $A04_SCORE, A05: $A05_SCORE, A06: $A06_SCORE"
-          echo "Quality: $QUALITY_SCORE"
+          echo "Test Score (without quality): $TEST_SCORE"
+          echo "Quality Score: $QUALITY_SCORE"
           
-          # Calculate total
-          TOTAL_SCORE=$((A01_SCORE + A02_SCORE + A03_SCORE + A04_SCORE + A05_SCORE + A06_SCORE + QUALITY_SCORE))
+          # Only add quality bonus if test score is at least 16 (2/3 of test points)
+          if [ $TEST_SCORE -ge 12 ]; then
+            TOTAL_SCORE=$((TEST_SCORE + QUALITY_SCORE))
+            echo "✅ Test score >= 16, adding quality bonus"
+          else
+            TOTAL_SCORE=$TEST_SCORE
+            echo "❌ Test score < 16, quality bonus not applied"
+          fi
+          
           MAX_SCORE=27
           
-          echo "Calculated score: $TOTAL_SCORE/$MAX_SCORE"
+          echo "Final calculated score: $TOTAL_SCORE/$MAX_SCORE"
           echo "points=$TOTAL_SCORE/$MAX_SCORE" >> $GITHUB_OUTPUT
 
       # create points bar with dynamic points
