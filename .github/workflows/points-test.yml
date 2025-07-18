@@ -35,7 +35,7 @@ jobs:
       - name: points bar
         uses: markpatterson27/points-bar@v1
         with:
-          points: '21/24'
+          points: '20/24'
           path: 'icons/points-bar.svg'
       
       # commit and push badges if badges have changed
