@@ -25,6 +25,7 @@ jobs:
       advancedcodequalitytest-result: ${{ steps.advancedcodequalitytest.outputs.result }}
 
     steps:
+      # --- STUDENTEN-REPO ---
       - name: Checkout Student Repo Code
         uses: actions/checkout@v4
 
@@ -41,9 +42,11 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      # --- BUILD STUDENT CODE ---
       - name: Build Student Project
         run: mvn clean install --batch-mode
 
+      # --- CREATE SonarCloud ---
       - name: Create SonarCloud Project if not exists
         run: |
           PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
@@ -62,6 +65,7 @@ jobs:
               -d "organization=$ORG"
           fi
 
+      # --- SONARQUBE ANALYSE ---
       - name: SonarQube Analysis
         id: sonarqubecheck
         uses: classroom-resources/autograding-command-grader@v1
@@ -81,6 +85,7 @@ jobs:
           timeout: 10
           max-score: 0
 
+      # --- ADVANCED SONARQUBE QUALITY CHECK ---
       - name: Advanced Code Quality Test
         id: advancedcodequalitytest
         uses: classroom-resources/autograding-command-grader@v1
@@ -113,17 +118,41 @@ jobs:
           timeout: 10
           max-score: 3
 
+      # --- SONARQUBE PROJECT DELETION ---
+      - name: Delete SonarCloud Project
+        if: always()
+        run: |
+          PROJECT_KEY="byluki2023_UE01-${{ github.event.repository.name }}"
+
+          # Check if project exists
+          EXISTS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+            "https://sonarcloud.io/api/components/show?component=$PROJECT_KEY" \
+            | jq -r '.component.key // empty')
+
+          if [ -n "$EXISTS" ]; then
+            echo "Deleting SonarCloud project $PROJECT_KEY..."
+            curl -s -X POST \
+              -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/projects/delete?project=$PROJECT_KEY"
+            echo "SonarCloud project deleted."
+          else
+            echo "No SonarCloud project $PROJECT_KEY found. Skipping deletion."
+          fi
+
+      # --- TESTS-REPO ---
       - name: Checkout Tests Repo
         uses: actions/checkout@v4
         with:
           repository: byluki2023/UE01_AllTests
           path: tests
 
+      # --- COPY TESTS INTO STUDENTEN-REPO ---
       - name: Copy Tests into student repo
         run: |
           mkdir -p src/test/java/se/jku/at/exercise
           cp tests/src/test/java/se/jku/at/exercise/*.java src/test/java/se/jku/at/exercise/
 
+      # --- TEST CASES ---
       - name: A01_Tests
         id: a01test
         uses: classroom-resources/autograding-command-grader@v1
@@ -178,6 +207,7 @@ jobs:
           timeout: 5
           max-score: 4
 
+      # --- AUTOGRADING REPORTER ---
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
@@ -195,7 +225,6 @@ jobs:
   update-points-bar:
     needs: run-autograding-tests
     runs-on: ubuntu-latest
-    # WICHTIG: Auch ausführen wenn Tests fehlschlagen
     if: always() && needs.run-autograding-tests.result != 'cancelled'
     permissions:
       contents: write
