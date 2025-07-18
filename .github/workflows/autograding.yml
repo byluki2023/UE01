@@ -292,7 +292,7 @@ jobs:
           echo "Test Score (without quality): $TEST_SCORE"
           echo "Quality Score: $QUALITY_SCORE"
           
-          # Only add quality bonus if test score is at least 16 (2/3 of test points)
+          # Only add quality bonus if test score is at least 12
           if [ $TEST_SCORE -ge 12 ]; then
             TOTAL_SCORE=$((TEST_SCORE + QUALITY_SCORE))
             echo "✅ Test score >= 16, adding quality bonus"
