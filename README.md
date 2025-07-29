@@ -6,6 +6,13 @@ Die Angabe findest du in PDF-Form im Ordner "Angabe".
 
 ---
 
+# Anleitung: Arbeiten mit GitHub Classroom
+GitHub Classroom hilft dir, Programmieraufgaben zu bearbeiten und abzugeben.  
+  
+Eine Programmierumgebung (IDE) kannst du [hier](https://www.jetbrains.com/idea/download/?section=windows) (IntelliJ) oder [hier](https://code.visualstudio.com/download) (VSCode) herunterladen.  
+Um die Übung starten zu können musst du das Projekt klonen. Eine Anleitung findest du [hier](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).  
+Die Abgabe/Zwischenspeicherung deines Codes erfolgt über zwei Befehle. "git commit" und "git push". Darüber hinaus bieten IntelliJ und VSCode die Möglichkeit Commit/Push zu übernehmen.  
+
 ## Punktestand
 ![Points bar](../../blob/status/.github/icons/points-bar.svg)
 
@@ -13,8 +20,6 @@ Achtung! Grafik ladet manchmal nicht von selbst.
 Cache leeren:  
 Windows/Linux: Strg + F5 oder Strg + Shift + R  
 Mac: Cmd + Shift + R
-
----
 
 ## Bewertungsskala
 
