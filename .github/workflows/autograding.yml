@@ -264,15 +264,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # switch to status branch (to match README link)
       - run: git checkout status || git checkout -b status
 
-      # calculate dynamic points
       - name: Calculate Points
         id: calculate-points
         run: |
-          # Extract and decode scores from test results (they are base64 encoded)
-          # The score is located in .tests[0].score, not directly in .score
           A01_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           A02_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a02test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           A03_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a03test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
@@ -280,45 +276,63 @@ jobs:
           A05_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a05test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           A06_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.a06test-result }}' | base64 -d | jq -r '.tests[0].score // 0')
           QUALITY_SCORE=$(printf '%s' '${{ needs.run-autograding-tests.outputs.advancedcodequalitytest-result }}' | base64 -d | jq -r '.tests[0].score // 0')
-          
-          # Calculate test scores only (without quality)
+
           TEST_SCORE=$((A01_SCORE + A02_SCORE + A03_SCORE + A04_SCORE + A05_SCORE + A06_SCORE))
-          
-          # Debug output - show raw and decoded values
-          echo "Raw A01 result: ${{ needs.run-autograding-tests.outputs.a01test-result }}"
-          echo "Decoded A01: $(printf '%s' '${{ needs.run-autograding-tests.outputs.a01test-result }}' | base64 -d)"
-          echo "A01: $A01_SCORE, A02: $A02_SCORE, A03: $A03_SCORE"
-          echo "A04: $A04_SCORE, A05: $A05_SCORE, A06: $A06_SCORE"
-          echo "Test Score (without quality): $TEST_SCORE"
-          echo "Quality Score: $QUALITY_SCORE"
-          
-          # Only add quality bonus if test score is at least 12
+
           if [ $TEST_SCORE -ge 12 ]; then
             TOTAL_SCORE=$((TEST_SCORE + QUALITY_SCORE))
-            echo "✅ Test score >= 16, adding quality bonus"
+            echo "✅ Test score >= 12, adding quality bonus"
           else
             TOTAL_SCORE=$TEST_SCORE
-            echo "❌ Test score < 16, quality bonus not applied"
+            QUALITY_SCORE=0
+            echo "❌ Test score < 12, quality bonus not applied"
           fi
-          
+
           MAX_SCORE=27
-          
+
           echo "Final calculated score: $TOTAL_SCORE/$MAX_SCORE"
           echo "points=$TOTAL_SCORE/$MAX_SCORE" >> $GITHUB_OUTPUT
 
-      # create points bar with dynamic points
+          # Export values for reuse in later steps
+          echo "A01_SCORE=$A01_SCORE" >> $GITHUB_ENV
+          echo "A02_SCORE=$A02_SCORE" >> $GITHUB_ENV
+          echo "A03_SCORE=$A03_SCORE" >> $GITHUB_ENV
+          echo "A04_SCORE=$A04_SCORE" >> $GITHUB_ENV
+          echo "A05_SCORE=$A05_SCORE" >> $GITHUB_ENV
+          echo "A06_SCORE=$A06_SCORE" >> $GITHUB_ENV
+          echo "QUALITY_SCORE=$QUALITY_SCORE" >> $GITHUB_ENV
+          echo "TOTAL_SCORE=$TOTAL_SCORE" >> $GITHUB_ENV
+          echo "MAX_SCORE=$MAX_SCORE" >> $GITHUB_ENV
+
       - name: Generate Points Bar
         uses: markpatterson27/points-bar@v1
         with:
           points: ${{ steps.calculate-points.outputs.points }}
           path: '.github/icons/points-bar.svg'
 
-      # commit and push badges if badges have changed
-      - name: Commit changes to points bar
+      - name: Generate Points Table Markdown
+        run: |
+          mkdir -p .github/icons
+          {
+            echo "| Test | Score | Max Score |"
+            echo "|------|-------|-----------|"
+            echo "| A01_Tests | $A01_SCORE | 4 |"
+            echo "| A02_Tests | $A02_SCORE | 4 |"
+            echo "| A03_Tests | $A03_SCORE | 4 |"
+            echo "| A04_Tests | $A04_SCORE | 4 |"
+            echo "| A05_Tests | $A05_SCORE | 4 |"
+            echo "| A06_Tests | $A06_SCORE | 4 |"
+            echo "| Advanced Code Quality Test | $QUALITY_SCORE | 3 |"
+            echo ""
+            echo "**Gesamt:** $TOTAL_SCORE / $MAX_SCORE"
+          } > .github/icons/points-table.md
+
+      - name: Commit changes to points bar and table
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add '.github/icons/points-bar.svg'
-          git commit -m "Add/Update points bar" || exit 0
+          git add '.github/icons/points-table.md'
+          git commit -m "Add/Update points bar and table" || exit 0
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git push origin status
