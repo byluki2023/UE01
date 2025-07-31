@@ -19,7 +19,11 @@ Die Abgabe/Zwischenspeicherung deines Codes erfolgt über zwei Befehle. "git com
 Achtung! Grafik ladet manchmal nicht von selbst.  
 Cache leeren:  
 Windows/Linux: Strg + F5 oder Strg + Shift + R  
-Mac: Cmd + Shift + R
+Mac: Cmd + Shift + R  
+
+---
+
+![Detaillierte Punkteübersicht](../../blob/status/.github/icons/points-table.md)
 
 ## Bewertungsskala
 
